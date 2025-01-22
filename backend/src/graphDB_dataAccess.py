@@ -560,5 +560,14 @@ class graphDBdataAccess:
             relationship_types = [record["relationshipType"] for record in relationship_result]
             return node_labels,relationship_types
         except Exception as e:
-            print(f"Error in getting node labels/relationship types from db: {e}")
+            logging.info(f"Error in getting node labels/relationship types from db: {e}")
+            return [],[]
+        
+    def get_schema_visualization(self):
+        try:
+            schema_viz_query = """CALL apoc.meta.graph"""
+            result = self.execute_query(schema_viz_query)
+            return result
+        except Exception as e:
+            logging.info(f"Error in getting schema visualization from db: {e}")
             return []

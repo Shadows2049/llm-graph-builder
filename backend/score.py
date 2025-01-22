@@ -1021,6 +1021,28 @@ async def backend_connection_configuration():
         return create_api_response(job_status, message=message, error=error_message.rstrip('.') + ', or fill from the login dialog.', data=graph_connection)
     finally:
         gc.collect()
-        
+
+@app.post("/schema_visualization")
+async def get_structured_schema(uri=Form(), userName=Form(), password=Form(), database=Form()):
+    try:
+        start = time.time()
+        graph = create_graph_database_connection(uri, userName, password, database)
+        graphDb_data_Access = graphDBdataAccess(graph)
+        result = graphDb_data_Access.get_schema_visualization()
+        end = time.time()
+        elapsed_time = end - start
+        logging.info(f'Schema result from DB: {result}')
+        json_obj = {'api_name':'schema_visualization','db_url':uri, 'userName':userName, 'database':database, 'logging_time': formatted_time(datetime.now(timezone.utc)), 'elapsed_api_time':f'{elapsed_time:.2f}'}
+        logger.log_struct(json_obj, "INFO")
+        return create_api_response('Success', data=result,message=f"Total elapsed API time {elapsed_time:.2f}")
+    except Exception as e:
+        message="Unable to get schema visualization from neo4j database"
+        error_message = str(e)
+        logging.info(message)
+        logging.exception(f'Exception:{error_message}')
+        return create_api_response("Failed", message=message, error=error_message)
+    finally:
+        gc.collect()
+
 if __name__ == "__main__":
     uvicorn.run(app)
