@@ -161,12 +161,45 @@ const GraphViewModal: React.FunctionComponent<GraphViewModalProps> = ({
     }
   };
 
+  // Api call to get the nodes and relations from existing schema
+  const graphSchemaApi = async () => {
+    try {
+      const result = await fetchData();
+      if (result && result.data.data.nodes.length > 0) {
+        const neoNodes = result.data.data.nodes;
+        const nodeIds = new Set(neoNodes.map((node: any) => node.element_id));
+        const neoRels = result.data.data.relationships
+          .map((f: Relationship) => f)
+          .filter((rel: any) => nodeIds.has(rel.end_node_element_id) && nodeIds.has(rel.start_node_element_id));
+        const { finalNodes, finalRels, schemeVal } = processGraphData(neoNodes, neoRels);
+        setNodes(finalNodes);
+        setRelationships(finalRels);
+        setNewScheme(schemeVal);
+        setLoading(false);
+        setAllNodes(finalNodes);
+        setAllRelationships(finalRels);
+        setScheme(schemeVal);
+        setDisableRefresh(false);
+      } else {
+        setLoading(false);
+        setStatus('danger');
+        setStatusMessage(`No Nodes and Relations for the ${inspectedName} file`);
+      }
+    } catch (error: any) {
+      setLoading(false);
+      setStatus('danger');
+      setStatusMessage(error.message);
+    }
+  };
+
   useEffect(() => {
     if (open) {
       setLoading(true);
       setGraphType([]);
       if (viewPoint !== graphLabels.chatInfoView) {
         graphApi();
+      } else if (viewPoint === graphLabels.showGraphSchema) {
+        graphSchemaApi();
       } else {
         const { finalNodes, finalRels, schemeVal } = processGraphData(nodeValues ?? [], relationshipValues ?? []);
         setAllNodes(finalNodes);
@@ -254,7 +287,9 @@ const GraphViewModal: React.FunctionComponent<GraphViewModalProps> = ({
   }
 
   const headerTitle =
-    viewPoint === graphLabels.showGraphView || viewPoint === graphLabels.chatInfoView
+    viewPoint === graphLabels.showGraphView ||
+    viewPoint === graphLabels.chatInfoView ||
+    viewPoint === graphLabels.showGraphSchema
       ? graphLabels.generateGraph
       : `${graphLabels.inspectGeneratedGraphFrom} ${inspectedName}`;
 

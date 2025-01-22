@@ -45,6 +45,7 @@ import { getChunkText } from '../services/getChunkText';
 import ChunkPopUp from './Popups/ChunkPopUp';
 import { isExpired, isFileReadyToProcess } from '../utils/Utils';
 import { useHasSelections } from '../hooks/useHasSelections';
+import { Hierarchy1Icon } from '@neo4j-ndl/react/icons';
 
 const ConfirmationDialog = lazy(() => import('./Popups/LargeFilePopUp/ConfirmationDialog'));
 
@@ -102,9 +103,9 @@ const Content: React.FC<ContentProps> = ({
     additionalInstructions,
     setAdditionalInstructions,
   } = useFileContext();
-  const [viewPoint, setViewPoint] = useState<'tableView' | 'showGraphView' | 'chatInfoView' | 'neighborView'>(
-    'tableView'
-  );
+  const [viewPoint, setViewPoint] = useState<
+    'tableView' | 'showGraphView' | 'chatInfoView' | 'neighborView' | 'showGraphSchema'
+  >('tableView');
 
   const [showDeletePopUp, setShowDeletePopUp] = useState<boolean>(false);
   const [deleteLoading, setIsDeleteLoading] = useState<boolean>(false);
@@ -554,6 +555,11 @@ const Content: React.FC<ContentProps> = ({
     setViewPoint('showGraphView');
   };
 
+  const handleSchemaView = () => {
+    setOpenGraphView(true);
+    setViewPoint('showGraphSchema');
+  };
+
   const disconnect = () => {
     queue.clear();
     const date = new Date();
@@ -990,6 +996,17 @@ const Content: React.FC<ContentProps> = ({
             >
               {buttonCaptions.exploreGraphWithBloom}
             </ButtonWithToolTip>
+
+            <ButtonWithToolTip
+              label={'Graph Schema'}
+              text={'Visualize Graph Schema'}
+              placement='top'
+              fill='outlined'
+              onClick={handleSchemaView}
+            >
+              <Hierarchy1Icon />
+            </ButtonWithToolTip>
+
             <ButtonWithToolTip
               text={
                 !selectedfileslength ? tooltips.deleteFile : `${selectedfileslength} ${tooltips.deleteSelectedFiles}`
