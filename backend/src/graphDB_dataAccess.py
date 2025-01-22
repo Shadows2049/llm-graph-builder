@@ -566,6 +566,7 @@ class graphDBdataAccess:
     def get_schema_visualization(self):
         try:
             schema_viz_query = """CALL apoc.meta.graph"""
+            logging.info("Executing graph schema visualization query")
             result = self.execute_query(schema_viz_query)
             return result
         except Exception as e:

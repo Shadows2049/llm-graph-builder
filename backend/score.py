@@ -1029,6 +1029,8 @@ async def get_structured_schema(uri=Form(), userName=Form(), password=Form(), da
         graph = create_graph_database_connection(uri, userName, password, database)
         graphDb_data_Access = graphDBdataAccess(graph)
         result = graphDb_data_Access.get_schema_visualization()
+        if result:
+            logging.info("Graph schema visualization query successful")
         end = time.time()
         elapsed_time = end - start
         logging.info(f'Schema result from DB: {result}')
