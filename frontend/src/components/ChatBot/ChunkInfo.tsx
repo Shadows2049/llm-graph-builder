@@ -12,13 +12,13 @@ import { ThemeWrapperContext } from '../../context/ThemeWrapper';
 import { chatModeLables } from '../../utils/Constants';
 import GraphViewModal from '../Graph/GraphViewModal';
 import { handleGraphNodeClick } from './chatInfo';
+import { useGraphContext } from '../../context/GraphWrapper';
 
 const ChunkInfo: FC<ChunkProps> = ({ loading, chunks, mode }) => {
   const themeUtils = useContext(ThemeWrapperContext);
   const [neoNodes, setNeoNodes] = useState<any[]>([]);
   const [neoRels, setNeoRels] = useState<any[]>([]);
-  const [openGraphView, setOpenGraphView] = useState(false);
-  const [viewPoint, setViewPoint] = useState('');
+  const { openGraphView, setOpenGraphView, viewPoint, setViewPoint } = useGraphContext();
   const [loadingGraphView, setLoadingGraphView] = useState(false);
 
   const handleChunkClick = (elementId: string, viewMode: string) => {

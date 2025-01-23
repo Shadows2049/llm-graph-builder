@@ -31,6 +31,7 @@ import { tokens } from '@neo4j-ndl/base';
 import GraphViewModal from '../../../Graph/GraphViewModal';
 import { handleGraphNodeClick } from '../../../ChatBot/chatInfo';
 import { ThemeWrapperContext } from '../../../../context/ThemeWrapper';
+import { useGraphContext } from '../../../../context/GraphWrapper';
 
 export default function DeduplicationTab() {
   const { breakpoints } = tokens;
@@ -44,8 +45,7 @@ export default function DeduplicationTab() {
   const tableRef = useRef(null);
   const [neoNodes, setNeoNodes] = useState<any[]>([]);
   const [neoRels, setNeoRels] = useState<any[]>([]);
-  const [openGraphView, setOpenGraphView] = useState(false);
-  const [viewPoint, setViewPoint] = useState('');
+  const { openGraphView, setOpenGraphView,viewPoint, setViewPoint } = useGraphContext();
   const [nodesCount, setNodesCount] = useState<number>(0);
   const { colorMode } = useContext(ThemeWrapperContext);
 

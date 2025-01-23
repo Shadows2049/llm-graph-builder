@@ -14,7 +14,7 @@ import {
 import { DocumentDuplicateIconOutline, ClipboardDocumentCheckIconOutline } from '@neo4j-ndl/react/icons';
 import '../../styling/info.css';
 import Neo4jRetrievalLogo from '../../assets/images/Neo4jRetrievalLogo.png';
-import { ExtendedNode, UserCredentials, chatInfoMessage } from '../../types';
+import { ExtendedNode, chatInfoMessage } from '../../types';
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import GraphViewButton from '../Graph/GraphViewButton';
 import { chunkEntitiesAPI } from '../../services/ChunkEntitiesInfo';
@@ -39,6 +39,7 @@ import MultiModeMetrics from './MultiModeMetrics';
 import getAdditionalMetrics from '../../services/AdditionalMetrics';
 import { withVisibility } from '../../HOC/WithVisibility';
 import MetricsCheckbox from './MetricsCheckbox';
+import { useGraphContext } from '../../context/GraphWrapper';
 
 const ChatInfoModal: React.FC<chatInfoMessage> = ({
   sources,
@@ -82,10 +83,10 @@ const ChatInfoModal: React.FC<chatInfoMessage> = ({
     error?.length
       ? 10
       : mode === chatModeLables['global search+vector+fulltext']
-      ? 7
-      : mode === chatModeLables.graph
-      ? 4
-      : 3
+        ? 7
+        : mode === chatModeLables.graph
+          ? 4
+          : 3
   );
   const { userCredentials } = useCredentials();
   const [, copy] = useCopyToClipboard();
@@ -99,16 +100,17 @@ const ChatInfoModal: React.FC<chatInfoMessage> = ({
     multiModelMetrics.length > 0 && Object.keys(multiModelMetrics[0]).length > 4
       ? true
       : multiModelMetrics.length > 0 && Object.keys(multiModelMetrics[0]).length <= 4
-      ? false
-      : null
+        ? false
+        : null
   );
   const [isAdditionalMetricsWithSingleMode, setIsAdditionalMetricsWithSingleMode] = useState<boolean | null>(
     metricDetails != undefined && Object.keys(metricDetails).length > 3
       ? true
       : metricDetails != undefined && Object.keys(metricDetails).length <= 3
-      ? false
-      : null
+        ? false
+        : null
   );
+  const { setOpenGraphView, setViewPoint } = useGraphContext();
 
   const actions: React.ComponentProps<typeof IconButton<'button'>>[] = useMemo(
     () => [
@@ -142,7 +144,6 @@ const ChatInfoModal: React.FC<chatInfoMessage> = ({
         toggleInfoLoading();
         try {
           const response = await chunkEntitiesAPI(
-            userCredentials as UserCredentials,
             userCredentials?.database,
             nodeDetails,
             entities_ids,
@@ -320,6 +321,12 @@ const ChatInfoModal: React.FC<chatInfoMessage> = ({
     () => activeChatmodes != null && Object.keys(activeChatmodes).length <= 1,
     [activeChatmodes]
   );
+
+  const handleGraphViewClick = () => {
+    setOpenGraphView(true);
+    setViewPoint('chatInfoView');
+  };
+  
   return (
     <div className='n-bg-palette-neutral-bg-weak p-4'>
       <div className='flex flex-row pb-6 items-center mb-2'>
@@ -356,9 +363,9 @@ const ChatInfoModal: React.FC<chatInfoMessage> = ({
               {mode != chatModeLables.graph ? <Tabs.Tab tabId={3}>Sources used</Tabs.Tab> : <></>}
               {mode != chatModeLables.graph ? <Tabs.Tab tabId={5}>Chunks</Tabs.Tab> : <></>}
               {mode === chatModeLables['graph+vector'] ||
-              mode === chatModeLables.graph ||
-              mode === chatModeLables['graph+vector+fulltext'] ||
-              mode === chatModeLables['entity search+vector'] ? (
+                mode === chatModeLables.graph ||
+                mode === chatModeLables['graph+vector+fulltext'] ||
+                mode === chatModeLables['entity search+vector'] ? (
                 <Tabs.Tab tabId={4}>Top Entities used</Tabs.Tab>
               ) : (
                 <></>
@@ -512,6 +519,7 @@ const ChatInfoModal: React.FC<chatInfoMessage> = ({
             relationshipValues={relationships}
             label='Graph Entities used for Answer Generation'
             viewType='chatInfoView'
+            handleClick={handleGraphViewClick}
           />
         </div>
       ) : (

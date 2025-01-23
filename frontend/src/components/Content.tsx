@@ -4,7 +4,7 @@ import { Button, Typography, Flex, StatusIndicator, useMediaQuery } from '@neo4j
 import { useCredentials } from '../context/UserCredentials';
 import { useFileContext } from '../context/UsersFiles';
 import { extractAPI } from '../utils/FileAPI';
-import { BannerAlertProps, ContentProps, CustomFile, OptionType, chunkdata, FileTableHandle } from '../types';
+import { BannerAlertProps, ContentProps, CustomFile, OptionType, chunkdata, FileTableHandle, ExtendedNode, ExtendedRelationship } from '../types';
 import deleteAPI from '../services/DeleteFiles';
 import { postProcessing } from '../services/PostProcessing';
 import { triggerStatusUpdateAPI } from '../services/ServerSideStatusUpdateAPI';
@@ -35,9 +35,11 @@ import { useMessageContext } from '../context/UserMessages';
 import PostProcessingToast from './Popups/GraphEnhancementDialog/PostProcessingCheckList/PostProcessingToast';
 import { getChunkText } from '../services/getChunkText';
 import ChunkPopUp from './Popups/ChunkPopUp';
-import { isExpired, isFileReadyToProcess } from '../utils/Utils';
+import { isExpired, isFileReadyToProcess, runRecoQuery, setDriver } from '../utils/Utils';
 import { useHasSelections } from '../hooks/useHasSelections';
 import { Hierarchy1Icon } from '@neo4j-ndl/react/icons';
+import GraphViewButton from './Graph/GraphViewButton';
+import { useGraphContext } from '../context/GraphWrapper';
 
 const ConfirmationDialog = lazy(() => import('./Popups/LargeFilePopUp/ConfirmationDialog'));
 
@@ -52,8 +54,7 @@ const Content: React.FC<ContentProps> = ({
 }) => {
   const { breakpoints } = tokens;
   const isTablet = useMediaQuery(`(min-width:${breakpoints.xs}) and (max-width: ${breakpoints.lg})`);
-  // const [init, setInit] = useState<boolean>(false);
-  const [openGraphView, setOpenGraphView] = useState<boolean>(false);
+  const { openGraphView, setOpenGraphView,viewPoint,setViewPoint } = useGraphContext();
   const [inspectedName, setInspectedName] = useState<string>('');
   const [documentName, setDocumentName] = useState<string>('');
   const [showConfirmationModal, setShowConfirmationModal] = useState<boolean>(false);
@@ -70,6 +71,11 @@ const Content: React.FC<ContentProps> = ({
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [totalPageCount, setTotalPageCount] = useState<number | null>(null);
   const [textChunks, setTextChunks] = useState<chunkdata[]>([]);
+
+  const [querResponse, setQueryResponse] = useState<any[]>([]);
+  const [isConnected, setIsConnected] = useState(false);
+  const [nodes, setNodes] = useState<ExtendedNode[]>([]);
+  const [relationships, setRelationships] = useState<ExtendedRelationship[]>([]);
 
   const [alertStateForRetry, setAlertStateForRetry] = useState<BannerAlertProps>({
     showAlert: false,
@@ -95,9 +101,6 @@ const Content: React.FC<ContentProps> = ({
     additionalInstructions,
     setAdditionalInstructions,
   } = useFileContext();
-  const [viewPoint, setViewPoint] = useState<
-    'tableView' | 'showGraphView' | 'chatInfoView' | 'neighborView' | 'showGraphSchema'
-  >('tableView');
 
   const [showDeletePopUp, setShowDeletePopUp] = useState<boolean>(false);
   const [deleteLoading, setIsDeleteLoading] = useState<boolean>(false);
@@ -146,10 +149,10 @@ const Content: React.FC<ContentProps> = ({
               ? postProcessingTasks.filter((task) => task !== 'graph_schema_consolidation')
               : postProcessingTasks
             : hasSelections
-            ? postProcessingTasks.filter(
+              ? postProcessingTasks.filter(
                 (task) => task !== 'graph_schema_consolidation' && task !== 'enable_communities'
               )
-            : postProcessingTasks.filter((task) => task !== 'enable_communities');
+              : postProcessingTasks.filter((task) => task !== 'enable_communities');
           if (payload.length) {
             const response = await postProcessing(payload);
             if (response.data.status === 'Success') {
@@ -535,9 +538,8 @@ const Content: React.FC<ContentProps> = ({
   const handleOpenGraphClick = () => {
     const bloomUrl = process.env.VITE_BLOOM_URL;
     const uriCoded = userCredentials?.uri.replace(/:\d+$/, '');
-    const connectURL = `${uriCoded?.split('//')[0]}//${userCredentials?.userName}@${uriCoded?.split('//')[1]}:${
-      userCredentials?.port ?? '7687'
-    }`;
+    const connectURL = `${uriCoded?.split('//')[0]}//${userCredentials?.userName}@${uriCoded?.split('//')[1]}:${userCredentials?.port ?? '7687'
+      }`;
     const encodedURL = encodeURIComponent(connectURL);
     const replacedUrl = bloomUrl?.replace('{CONNECT_URL}', encodedURL);
     window.open(replacedUrl, '_blank');
@@ -548,9 +550,24 @@ const Content: React.FC<ContentProps> = ({
     setViewPoint('showGraphView');
   };
 
-  const handleSchemaView = () => {
-    setOpenGraphView(true);
-    setViewPoint('showGraphSchema');
+
+  const handleSchemaView = async () => {
+    const connectionURI = userCredentials?.uri || ''
+    const username = 'neo4j';
+    const password = userCredentials?.password || ''
+    const connectionStatus = await setDriver(connectionURI, username, password);
+    if (connectionStatus) {
+      setIsConnected(true);
+      const response = await runRecoQuery('CALL apoc.meta.graph () YIELD nodes, relationships RETURN nodes, relationships');
+      if (response) {
+        console.log('Query Response:', response[0]);
+        setQueryResponse(response);
+        setNodes(response[0].nodes);
+        setRelationships(response[0].relationships);
+      }
+    } else {
+      console.error('Failed to connect to Neo4j');
+    }
   };
 
   const disconnect = () => {
@@ -602,12 +619,12 @@ const Content: React.FC<ContentProps> = ({
           return prev.map((f) => {
             return f.name === filename
               ? {
-                  ...f,
-                  status: 'Ready to Reprocess',
-                  processingProgress: isStartFromBegining ? 0 : f.processingProgress,
-                  nodesCount: isStartFromBegining ? 0 : f.nodesCount,
-                  relationshipsCount: isStartFromBegining ? 0 : f.relationshipsCount,
-                }
+                ...f,
+                status: 'Ready to Reprocess',
+                processingProgress: isStartFromBegining ? 0 : f.processingProgress,
+                nodesCount: isStartFromBegining ? 0 : f.nodesCount,
+                relationshipsCount: isStartFromBegining ? 0 : f.relationshipsCount,
+              }
               : f;
           });
         });
@@ -995,6 +1012,14 @@ const Content: React.FC<ContentProps> = ({
             >
               <Hierarchy1Icon />
             </ButtonWithToolTip>
+            <GraphViewButton
+              nodeValues={nodes}
+              relationshipValues={relationships}
+              label='Graph Schema'
+              viewType='showGraphSchema'
+              handleClick={handleSchemaView}
+            >
+            </GraphViewButton>
 
             <ButtonWithToolTip
               text={

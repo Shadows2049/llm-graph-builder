@@ -21,6 +21,7 @@ import youtubelightlogo from '../assets/images/youtube-lightmode.svg';
 import s3logo from '../assets/images/s3logo.png';
 import gcslogo from '../assets/images/gcs.webp';
 import { chatModeLables, EXPIRATION_DAYS } from './Constants';
+import neo4j, { Driver } from 'neo4j-driver';
 
 // Get the Url
 export const url = () => {
@@ -544,3 +545,32 @@ export function isFileReadyToProcess(file: CustomFile, withLocalCheck: boolean) 
   }
   return file.status === 'New' || file.status == 'Ready to Reprocess';
 }
+
+export let driver: Driver;
+
+export const setDriver = async (connectionURI: string, username: string, password: string) => {
+  try {
+    driver = neo4j.driver(connectionURI, neo4j.auth.basic(username, password));
+    await driver.getServerInfo();
+    return true;
+  } catch (err) {
+    console.error(`Connection error\n${err}\nCause: ${err as Error}`);
+    return false;
+  }
+}
+export const runRecoQuery = async (query: string) => {
+  try {
+    const { records } = await driver.executeQuery(query);
+    const result = records.map((record) => {
+      return {
+        nodes: record.get('nodes'),
+        relationships: record.get('relationships'),
+      };
+    });
+    console.log('Response:', result);
+    return result;
+  } catch (err) {
+    console.error(`Query Execution Error: ${err}`);
+    return null;
+  }
+};

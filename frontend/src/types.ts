@@ -727,6 +727,7 @@ export interface GraphViewButtonProps {
   fill?: 'text' | 'filled' | 'outlined';
   label: string;
   viewType: string;
+  handleClick: () => void;
 }
 export interface DrawerChatbotProps {
   isExpanded: boolean;
@@ -772,8 +773,16 @@ export interface MessageContextType {
 }
 
 export interface GraphContextType {
-  loadingGraph: boolean;
-  setLoadingGraph: Dispatch<SetStateAction<boolean>>;
+  viewPoint: string;
+  setViewPoint: Dispatch<SetStateAction<string>>;
+  openGraphView: boolean;
+  setOpenGraphView: Dispatch<SetStateAction<boolean>>;
+  isGraphLoading: boolean;
+  setIsGraphLoading: Dispatch<SetStateAction<boolean>>;
+  nodes: ExtendedNode[] | ExtendedNode;
+  setNodes: Dispatch<SetStateAction<ExtendedNode[]>>;
+  relationships: ExtendedRelationship[] | ExtendedRelationship;
+  setRelationships: Dispatch<SetStateAction<ExtendedRelationship[]>>;
 }
 
 export interface DatabaseStatusProps {

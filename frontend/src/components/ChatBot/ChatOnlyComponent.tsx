@@ -10,6 +10,7 @@ import { clearChatAPI } from '../../services/QnaAPI';
 import { ChatProps, connectionState, Messages, UserCredentials } from '../../types';
 import { getIsLoading } from '../../utils/Utils';
 import ThemeWrapper from '../../context/ThemeWrapper';
+import { GraphContextWrapper } from '../../context/GraphWrapper';
 
 const ChatContent: React.FC<ChatProps> = ({ chatMessages }) => {
   const { clearHistoryData, messages, setMessages, setClearHistoryData, setIsDeleteChatLoading, isDeleteChatLoading } =
@@ -155,7 +156,9 @@ const ChatOnlyComponent: React.FC = () => {
       <UserCredentialsWrapper>
         <FileContextProvider>
           <MessageContextWrapper>
-            <ChatContent chatMessages={chatMessages} />
+            <GraphContextWrapper>
+              <ChatContent chatMessages={chatMessages} />
+            </GraphContextWrapper>
           </MessageContextWrapper>
         </FileContextProvider>
       </UserCredentialsWrapper>

@@ -5,12 +5,12 @@ import { CommunitiesProps } from '../../types';
 import { chatModeLables } from '../../utils/Constants';
 import GraphViewModal from '../Graph/GraphViewModal';
 import { handleGraphNodeClick } from './chatInfo';
+import { useGraphContext } from '../../context/GraphWrapper';
 
 const CommunitiesInfo: FC<CommunitiesProps> = ({ loading, communities, mode }) => {
   const [neoNodes, setNeoNodes] = useState<any[]>([]);
   const [neoRels, setNeoRels] = useState<any[]>([]);
-  const [openGraphView, setOpenGraphView] = useState(false);
-  const [viewPoint, setViewPoint] = useState('');
+  const { openGraphView, setOpenGraphView, viewPoint, setViewPoint } = useGraphContext();
   const [loadingGraphView, setLoadingGraphView] = useState(false);
 
   const handleCommunityClick = (elementId: string, viewMode: string) => {

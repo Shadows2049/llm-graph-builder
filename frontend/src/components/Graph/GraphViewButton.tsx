@@ -1,19 +1,14 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@neo4j-ndl/react';
 import GraphViewModal from './GraphViewModal';
 import { GraphViewButtonProps } from '../../types';
+import { useGraphContext } from '../../context/GraphWrapper';
 
-const GraphViewButton: React.FC<GraphViewButtonProps> = ({ nodeValues, relationshipValues, fill, label }) => {
-  const [openGraphView, setOpenGraphView] = useState(false);
-  const [viewPoint, setViewPoint] = useState('');
-
-  const handleGraphViewClick = () => {
-    setOpenGraphView(true);
-    setViewPoint('chatInfoView');
-  };
+const GraphViewButton: React.FC<GraphViewButtonProps> = ({ nodeValues, relationshipValues, fill, label, handleClick }) => {
+  const { openGraphView, setOpenGraphView, viewPoint } = useGraphContext();
   return (
     <>
-      <Button fill={fill} onClick={handleGraphViewClick} style={{}}>
+      <Button fill={fill} onClick={handleClick} style={{}}>
         {label}
       </Button>
       <GraphViewModal
