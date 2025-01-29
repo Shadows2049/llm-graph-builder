@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+import { tailwindConfig } from '@neo4j-ndl/base';
+
 export default {
   content: [
     "./index.html",
@@ -8,7 +10,7 @@ export default {
     extend: {},
   },
   plugins: [],
-  presets:[require('@neo4j-ndl/base').tailwindConfig],
+  presets:[tailwindConfig],
   corePlugins: {
     preflight: false,
   },
