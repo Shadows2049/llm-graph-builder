@@ -8,7 +8,7 @@ def load_document_content(file_path):
     if Path(file_path).suffix.lower() == '.pdf':
         return PyMuPDFLoader(file_path)
     else:
-        return UnstructuredFileLoader(file_path, mode="paged",autodetect_encoding=True)
+        return UnstructuredFileLoader(file_path, mode="elements",autodetect_encoding=True)
     
 def get_documents_from_file_by_path(file_path,file_name):
     file_path = Path(file_path)
@@ -21,7 +21,7 @@ def get_documents_from_file_by_path(file_path,file_name):
                 pages = loader.load()
             else:
                 unstructured_pages = loader.load()  
-                logging.info(f'file {file_name} successfully loaded ******************************************************************************************************')        
+                print("unstructured file successfully loaded************************************************")
                 pages= get_pages_with_page_numbers(unstructured_pages)      
         except Exception as e:
             raise Exception('Error while reading the file content or metadata')
